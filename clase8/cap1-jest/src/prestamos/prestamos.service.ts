@@ -27,11 +27,11 @@ export class PrestamosService {
     const libro = this.libros.findOne(dto.libroId);
     this.socios.findOne(dto.socioId);
 
-    if (libro.disponibles < 0) {
+    if (libro.disponibles <= 0) {
       throw new ConflictException('No hay ejemplares disponibles');
     }
     if (
-      this.repo.findActivosPorSocio(dto.socioId).length > MAX_PRESTAMOS_ACTIVOS
+      this.repo.findActivosPorSocio(dto.socioId).length >= MAX_PRESTAMOS_ACTIVOS
     ) {
       throw new ConflictException('El socio alcanzó el máximo de préstamos');
     }
@@ -57,10 +57,11 @@ export class PrestamosService {
 
     const ahora = new Date();
     const atrasoMs = ahora.getTime() - new Date(prestamo.vencimiento).getTime();
-    const diasDeAtraso = Math.max(0, Math.floor(atrasoMs / DIA_MS));
+    const diasDeAtraso = Math.max(0, Math.ceil(atrasoMs / DIA_MS));
 
     prestamo.devueltoEn = ahora.toISOString();
     prestamo.multa = diasDeAtraso * MULTA_POR_DIA;
+    this.libros.ajustarDisponibles(prestamo.libroId, 1);
     return this.repo.save(prestamo);
   }
 
