@@ -6,7 +6,9 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
 } from '@nestjs/common';
+import { ConsultaPrestamosDto } from './dto/consulta-prestamos.dto';
 import { CrearPrestamoDto } from './dto/crear-prestamo.dto';
 import { PrestamosService } from './prestamos.service';
 
@@ -20,8 +22,8 @@ export class PrestamosController {
   }
 
   @Get()
-  listar() {
-    return this.service.listar();
+  listar(@Query() consulta: ConsultaPrestamosDto) {
+    return this.service.listar(consulta);
   }
 
   @Get('vencidos')

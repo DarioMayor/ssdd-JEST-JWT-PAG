@@ -6,7 +6,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, LessThan, Repository } from 'typeorm';
 import { LibrosService } from '../libros/libros.service';
+import { paginar, PaginaResultado } from '../paginacion/paginar';
 import { SociosService } from '../socios/socios.service';
+import { ConsultaPrestamosDto } from './dto/consulta-prestamos.dto';
 import { CrearPrestamoDto } from './dto/crear-prestamo.dto';
 import { Prestamo } from './entities/prestamo.entity';
 import {
@@ -76,8 +78,27 @@ export class PrestamosService {
     return prestamo;
   }
 
-  listar(): Promise<Prestamo[]> {
-    return this.repo.find();
+  listar(consulta: ConsultaPrestamosDto): Promise<PaginaResultado<Prestamo>> {
+    const qb = this.repo.createQueryBuilder('prestamo');
+
+    if (consulta.socioId !== undefined) {
+      qb.andWhere('prestamo.socioId = :socioId', {
+        socioId: consulta.socioId,
+      });
+    }
+
+    if (consulta.estado === 'activo') {
+      qb.andWhere('prestamo.devueltoEn IS NULL');
+    } else if (consulta.estado === 'devuelto') {
+      qb.andWhere('prestamo.devueltoEn IS NOT NULL');
+    } else if (consulta.estado === 'vencido') {
+      qb.andWhere('prestamo.devueltoEn IS NULL').andWhere(
+        'prestamo.vencimiento < :ahora',
+        { ahora: new Date() },
+      );
+    }
+
+    return paginar(qb, 'prestamo', consulta);
   }
 
   listarVencidos(): Promise<Prestamo[]> {

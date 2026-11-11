@@ -8,8 +8,11 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
+import { CursorDto } from '../paginacion/paginacion.dto';
 import { ActualizarLibroDto } from './dto/actualizar-libro.dto';
+import { ConsultaLibrosDto } from './dto/consulta-libros.dto';
 import { CrearLibroDto } from './dto/crear-libro.dto';
 import { LibrosService } from './libros.service';
 
@@ -23,8 +26,13 @@ export class LibrosController {
   }
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query() consulta: ConsultaLibrosDto) {
+    return this.service.findAll(consulta);
+  }
+
+  @Get('cursor')
+  listarPorCursor(@Query() consulta: CursorDto) {
+    return this.service.listarPorCursor(consulta);
   }
 
   @Get(':id')

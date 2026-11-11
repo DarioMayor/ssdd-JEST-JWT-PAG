@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { PaginacionDto } from '../paginacion/paginacion.dto';
+import { paginar, PaginaResultado } from '../paginacion/paginar';
 import { CrearSocioDto } from './dto/crear-socio.dto';
 import { Socio } from './entities/socio.entity';
 
@@ -21,8 +23,8 @@ export class SociosService {
     return this.repo.save(this.repo.create(dto));
   }
 
-  findAll(): Promise<Socio[]> {
-    return this.repo.find();
+  findAll(consulta: PaginacionDto): Promise<PaginaResultado<Socio>> {
+    return paginar(this.repo.createQueryBuilder('socio'), 'socio', consulta);
   }
 
   async findOne(id: number): Promise<Socio> {

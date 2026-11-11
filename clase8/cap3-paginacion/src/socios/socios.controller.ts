@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { PaginacionDto } from '../paginacion/paginacion.dto';
 import { CrearSocioDto } from './dto/crear-socio.dto';
 import { SociosService } from './socios.service';
 
@@ -12,8 +21,8 @@ export class SociosController {
   }
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  findAll(@Query() consulta: PaginacionDto) {
+    return this.service.findAll(consulta);
   }
 
   @Get(':id')
