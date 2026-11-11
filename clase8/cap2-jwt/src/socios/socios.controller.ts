@@ -1,3 +1,4 @@
+import { Public } from '@nestjs/authentication';
 import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { CrearSocioDto } from './dto/crear-socio.dto';
 import { SociosService } from './socios.service';
@@ -6,6 +7,7 @@ import { SociosService } from './socios.service';
 export class SociosController {
   constructor(private readonly service: SociosService) {}
 
+  @Public()
   @Post()
   create(@Body() dto: CrearSocioDto) {
     return this.service.create(dto);

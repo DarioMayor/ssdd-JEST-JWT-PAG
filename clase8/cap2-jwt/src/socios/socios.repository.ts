@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { CrearSocioDto } from './dto/crear-socio.dto';
 import { Socio } from './entities/socio.entity';
 
 @Injectable()
@@ -7,7 +6,7 @@ export class SociosRepository {
   private socios: Socio[] = [];
   private siguienteId = 1;
 
-  create(datos: CrearSocioDto): Socio {
+  create(datos: Omit<Socio, 'id'>): Socio {
     const socio: Socio = { id: this.siguienteId++, ...datos };
     this.socios.push(socio);
     return socio;

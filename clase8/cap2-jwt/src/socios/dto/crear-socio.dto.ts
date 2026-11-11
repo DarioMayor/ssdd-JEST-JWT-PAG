@@ -1,4 +1,5 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsIn, IsOptional, IsString, MinLength } from 'class-validator';
+import type { RolSocio } from '../entities/socio.entity';
 
 export class CrearSocioDto {
   @IsString()
@@ -7,4 +8,12 @@ export class CrearSocioDto {
 
   @IsEmail()
   email: string;
+
+  @IsString()
+  @MinLength(6)
+  contrasena: string;
+
+  @IsOptional()
+  @IsIn(['socio', 'bibliotecario'])
+  rol?: RolSocio = 'socio';
 }

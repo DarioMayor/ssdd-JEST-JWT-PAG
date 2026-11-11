@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { LibrosService } from '../libros/libros.service';
-import { SociosService } from '../socios/socios.service';
+import { SociosService, type SocioPublico } from '../socios/socios.service';
 import { CrearPrestamoDto } from './dto/crear-prestamo.dto';
 import { Prestamo } from './entities/prestamo.entity';
 import {
@@ -23,15 +23,15 @@ export class PrestamosService {
     private readonly socios: SociosService,
   ) {}
 
-  prestar(dto: CrearPrestamoDto): Prestamo {
+  prestar(dto: CrearPrestamoDto, socioId: number): Prestamo {
     const libro = this.libros.findOne(dto.libroId);
-    this.socios.findOne(dto.socioId);
+    this.socios.findOne(socioId);
 
     if (libro.disponibles <= 0) {
       throw new ConflictException('No hay ejemplares disponibles');
     }
     if (
-      this.repo.findActivosPorSocio(dto.socioId).length >= MAX_PRESTAMOS_ACTIVOS
+      this.repo.findActivosPorSocio(socioId).length >= MAX_PRESTAMOS_ACTIVOS
     ) {
       throw new ConflictException('El socio alcanzó el máximo de préstamos');
     }
@@ -41,7 +41,7 @@ export class PrestamosService {
     this.libros.ajustarDisponibles(libro.id, -1);
     return this.repo.create({
       libroId: libro.id,
-      socioId: dto.socioId,
+      socioId,
       prestadoEn: ahora.toISOString(),
       vencimiento: new Date(ahora.getTime() + plazo * DIA_MS).toISOString(),
       devueltoEn: null,
@@ -49,8 +49,8 @@ export class PrestamosService {
     });
   }
 
-  devolver(id: number): Prestamo {
-    const prestamo = this.obtener(id);
+  devolver(id: number, usuario?: SocioPublico): Prestamo {
+    const prestamo = this.obtener(id, usuario);
     if (prestamo.devueltoEn !== null) {
       throw new ConflictException('El préstamo ya fue devuelto');
     }
@@ -65,14 +65,28 @@ export class PrestamosService {
     return this.repo.save(prestamo);
   }
 
-  obtener(id: number): Prestamo {
+  obtener(id: number, usuario?: SocioPublico): Prestamo {
     const prestamo = this.repo.findById(id);
-    if (!prestamo) throw new NotFoundException(`El préstamo ${id} no existe`);
+    // Si un socio común consulta un préstamo ajeno, respondemos 404 idéntico
+    // al de inexistente para no revelar si el préstamo existe.
+    const esAjenoParaSocio =
+      prestamo !== undefined &&
+      usuario !== undefined &&
+      usuario.rol !== 'bibliotecario' &&
+      prestamo.socioId !== usuario.id;
+
+    if (!prestamo || esAjenoParaSocio) {
+      throw new NotFoundException(`El préstamo ${id} no existe`);
+    }
     return prestamo;
   }
 
-  listar(): Prestamo[] {
-    return this.repo.findAll();
+  listar(usuario?: SocioPublico): Prestamo[] {
+    const todos = this.repo.findAll();
+    if (usuario && usuario.rol !== 'bibliotecario') {
+      return todos.filter((p) => p.socioId === usuario.id);
+    }
+    return todos;
   }
 
   listarVencidos(): Prestamo[] {

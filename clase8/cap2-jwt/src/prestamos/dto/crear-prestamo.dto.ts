@@ -5,10 +5,6 @@ export class CrearPrestamoDto {
   @Min(1)
   libroId: number;
 
-  @IsInt()
-  @Min(1)
-  socioId: number;
-
   // Plazo en días (por defecto, 14)
   @IsOptional()
   @IsInt()

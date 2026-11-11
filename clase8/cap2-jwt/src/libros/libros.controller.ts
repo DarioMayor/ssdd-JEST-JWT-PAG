@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { Roles } from '../auth/roles.decorator';
 import { ActualizarLibroDto } from './dto/actualizar-libro.dto';
 import { CrearLibroDto } from './dto/crear-libro.dto';
 import { LibrosService } from './libros.service';
@@ -17,6 +18,7 @@ import { LibrosService } from './libros.service';
 export class LibrosController {
   constructor(private readonly service: LibrosService) {}
 
+  @Roles('bibliotecario')
   @Post()
   create(@Body() dto: CrearLibroDto) {
     return this.service.create(dto);
@@ -32,6 +34,7 @@ export class LibrosController {
     return this.service.findOne(id);
   }
 
+  @Roles('bibliotecario')
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -40,6 +43,7 @@ export class LibrosController {
     return this.service.update(id, dto);
   }
 
+  @Roles('bibliotecario')
   @Delete(':id')
   @HttpCode(204)
   remove(@Param('id', ParseIntPipe) id: number) {
